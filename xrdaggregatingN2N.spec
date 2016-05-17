@@ -6,10 +6,9 @@
 %global use_systemd 0
 %endif
 
-Summary:	xrootd-aggregatingname2name 
+Summary:	xrootd-aggregatingname2name
 Name:		xrootd-aggregatingname2name
 Version:	1.0.1
-Epoch:		1
 Release:	1%{?dist}
 License:	none
 Group:		System Environment/Daemons
@@ -35,6 +34,7 @@ xrootd-aggregatingname2name
 
 %prep
 %setup -q
+./BOOTSTRAP
 
 %build
 ./configure --prefix=%{__prefix} --libdir=%{__libdir} --with-xrootd-location=%{__xrootddir}
