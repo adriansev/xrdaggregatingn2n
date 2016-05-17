@@ -6,8 +6,10 @@
 ## Checked in by $Author: dfeich $
 #######################################################################
 
+ACLOCAL_AMFLAGS = -I m4
+
 lib_LTLIBRARIES = libXrdAggregatingName2Name.la
-INCLUDES = -I$(XROOTD_LOCATION)/src -I$(XROOTD_LOCATION)/include/xrootd
+AM_CPPFLAGS = -I$(XROOTD_LOCATION)/src -I$(XROOTD_LOCATION)/include/xrootd
 
 ###############################################
 

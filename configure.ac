@@ -5,6 +5,8 @@ AC_PREREQ(2.57)
 AC_INIT(xrootd-aggregatingname2name, 1.0.1,[xrootd-l@slac.stanford.edu])
 AC_CONFIG_SRCDIR([XrdAggregatingName2Name.cc])
 
+AC_CONFIG_MACRO_DIR([m4])
+
 AC_CANONICAL_TARGET
 AC_CANONICAL_HOST
 
@@ -44,7 +46,7 @@ AC_PROG_CXX([$CXX_PREFERENCE])
 
 
 echo $libdir | grep lib64 >& /dev/null
-if test "$?" = "0" ; then 
+if test "$?" = "0" ; then
    MARK64=64;
 else
    MARK64="";
@@ -55,7 +57,7 @@ AC_SUBST(MARK64)
 AC_ARG_WITH(xrootd-location,
           [  --with-xrootd-location=installation of xrootd version to use (default is /opt/xrootd) ],
           [XROOTD_LOCATION=$withval],
-          [XROOTD_LOCATION=/opt/xrootd])
+          [XROOTD_LOCATION=/usr])
 
 AC_SUBST(XROOTD_LOCATION)
 
