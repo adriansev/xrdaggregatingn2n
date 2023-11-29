@@ -1,0 +1,2 @@
+./el7_build ./build_rpm
+./el9_build ./build_rpm

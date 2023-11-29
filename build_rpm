@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+rpmdev-setuptree
+DIST_SUFFIX="$(rpm --eval '%{dist}')"
+DIST="${DIST_SUFFIX:1}"
+RPMDIR=$(rpm --eval '%{_rpmdir}')
+SRPMDIR=$(rpm --eval '%{_srcrpmdir}')
+mkdir -p ${RPMDIR}/${DIST} ${SRPMDIR}/${DIST}
+
+custom_rpmmacros () {
+grep "^%_rpmdir" ${HOME}/.rpmmacros     || { echo '%_rpmdir    %{_topdir}/RPMS/%(str=%{dist};echo ${str:1};)' >> ${HOME}/.rpmmacros; export RPMDIR_NOTDEF=1; }
+grep "^%_srcrpmdir" ${HOME}/.rpmmacros  || { echo '%_srcrpmdir %{_topdir}/SRPMS/%(str=%{dist};echo ${str:1};)' >> ${HOME}/.rpmmacros; export SRPMDIR_NOTDEF=1; }
+}
+
+custom_rpmmacros_cleanup () {
+[[ -n ${RPMDIR_NOTDEF} ]] && sed -i '/^%_rpmdir.*/d' ${HOME}/.rpmmacros
+[[ -n ${SRPMDIR_NOTDEF} ]] && sed -i '/^%_srcrpmdir.*/d' ${HOME}/.rpmmacros
+}
+
+SPEC="xrootd-aggregatingname2name.spec"
+SPECSDIR=$(rpm --eval '%{_specdir}')
+cp -f ${SPEC} "$(rpm --eval '%{_specdir}')/" || { echo "could not copy the spec file to spec dir"; exit 1; }
+
+PKGNAME="$(awk '/Name: / {print $NF}' ${SPEC} | head -1)"
+VER="$(awk '/Version: / {print $NF}' ${SPEC})"
+PKG="${PKGNAME}-${VER}"
+TARGZ="${PKG}.tar.gz"
+
+PKGTEMPDIR="/tmp/pkgtmp/${PKG}"
+rm -rf "/tmp/pkgtmp" &> /dev/null
+mkdir -p ${PKGTEMPDIR} || { echo "Could not create ${PKGTEMPDIR}";  exit $?; }
+
+rsync -rlptW \
+--exclude '.git' --exclude "*.spec" --exclude "*.tar.gz" --exclude "*_build" --exclude "build_rpm" --exclude "packages" \
+--exclude ".gitignore" --exclude "make_rpms" --exclude "publish.sh" --exclude ".gitlab*.yml" \
+-ahuHAXW ${PWD}/ "${PKGTEMPDIR}/"
+
+pushd "/tmp/pkgtmp" &> /dev/null
+tar -czf ${TARGZ} ./${PKG}
+popd &> /dev/null
+
+mv "/tmp/pkgtmp/${TARGZ}" .
+rm -rf "/tmp/pkgtmp" &> /dev/null
+
+rpmdev-setuptree
+mv -f "${TARGZ}" "${HOME}/rpmbuild/SOURCES/"
+cp -f ${SPEC} "$(rpm --eval '%{_specdir}')/" || { echo "could not copy the spec file to spec dir"; exit 1; }
+
+custom_rpmmacros
+pushd "${HOME}/rpmbuild/SPECS" &> /dev/null
+rpmbuild --define "debug_package %{nil}" -ba ${SPEC} || { echo "build failed"; custom_rpmmacros_cleanup ; exit 1; }
+popd &> /dev/null
+custom_rpmmacros_cleanup
+
+SAVETO="packages/${DIST}"
+mkdir -p ${SAVETO}
+
+find ${RPMDIR} -name "$(basename ${SPEC} .spec)*${DIST}*" -exec cp -f {} ${SAVETO}/ \;
+find ${SRPMDIR} -name "$(basename ${SPEC} .spec)*${DIST}*" -exec cp -f {} ${SAVETO}/ \;
+

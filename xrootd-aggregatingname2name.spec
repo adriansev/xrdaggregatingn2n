@@ -1,7 +1,7 @@
 Summary:  xrootd-aggregatingname2name
 Name: xrootd-aggregatingname2name
 Version:  1.0.1
-Release:  1%{?dist}
+Release:  3%{?dist}
 License:  none
 Group:  System Environment/Daemons
 
@@ -25,6 +25,7 @@ make %{?_smp_mflags}
 
 %install
 make install DESTDIR=$RPM_BUILD_ROOT
+find $RPM_BUILD_ROOT -name "*.la" -delete
 find $RPM_BUILD_ROOT \( -type f -o -type l \) -print | sed "s#^$RPM_BUILD_ROOT/*#/#" > RPM-FILE-LIST
 
 %clean
